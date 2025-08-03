@@ -1,0 +1,90 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.23'
+    
+    - name: Build binaries
+      run: |
+        # Build for different platforms
+        GOOS=linux GOARCH=amd64 go build -o srs-linux-amd64 .
+        GOOS=linux GOARCH=arm64 go build -o srs-linux-arm64 .
+        GOOS=darwin GOARCH=amd64 go build -o srs-darwin-amd64 .
+        GOOS=darwin GOARCH=arm64 go build -o srs-darwin-arm64 .
+        GOOS=windows GOARCH=amd64 go build -o srs-windows-amd64.exe .
+        
+        # Make them executable
+        chmod +x srs-*
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          srs-linux-amd64
+          srs-linux-arm64
+          srs-darwin-amd64
+          srs-darwin-arm64
+          srs-windows-amd64.exe
+        body: |
+          ## Installation
+          
+          Download the binary for your platform and make it executable:
+          
+          ### Linux (x64)
+          ```bash
+          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-linux-amd64 -o srs
+          chmod +x srs
+          sudo mv srs /usr/local/bin/
+          ```
+          
+          ### Linux (ARM64)
+          ```bash
+          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-linux-arm64 -o srs
+          chmod +x srs
+          sudo mv srs /usr/local/bin/
+          ```
+          
+          ### macOS (Intel)
+          ```bash
+          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-darwin-amd64 -o srs
+          chmod +x srs
+          sudo mv srs /usr/local/bin/
+          ```
+          
+          ### macOS (Apple Silicon)
+          ```bash
+          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-darwin-arm64 -o srs
+          chmod +x srs
+          sudo mv srs /usr/local/bin/
+          ```
+          
+          ## Quick Start
+          ```bash
+          # Create a simple card
+          mkdir my-deck
+          echo "# What is 2 + 2?" > my-deck/math.md
+          echo "" >> my-deck/math.md
+          echo "---" >> my-deck/math.md
+          echo "" >> my-deck/math.md
+          echo "# 4" >> my-deck/math.md
+          
+          # Start reviewing
+          srs review my-deck
+          ```
+        generate_release_notes: true
