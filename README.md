@@ -17,29 +17,29 @@ A terminal-based spaced repetition system that follows Unix principles. Cards ar
 
 ### Quick Install (Linux/macOS)
 ```bash
-curl -sSL https://raw.githubusercontent.com/YOUR_USERNAME/srs/main/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/finnzink/srs/main/install.sh | bash
 ```
 
 ### Manual Download
-Download the binary for your platform from [releases](https://github.com/YOUR_USERNAME/srs/releases):
+Download the binary for your platform from [releases](https://github.com/finnzink/srs/releases):
 
 **Linux:**
 ```bash
-curl -L https://github.com/YOUR_USERNAME/srs/releases/latest/download/srs-linux-amd64 -o srs
+curl -L https://github.com/finnzink/srs/releases/latest/download/srs-linux-amd64 -o srs
 chmod +x srs
 sudo mv srs /usr/local/bin/
 ```
 
 **macOS:**
 ```bash
-curl -L https://github.com/YOUR_USERNAME/srs/releases/latest/download/srs-darwin-arm64 -o srs
+curl -L https://github.com/finnzink/srs/releases/latest/download/srs-darwin-arm64 -o srs
 chmod +x srs
 sudo mv srs /usr/local/bin/
 ```
 
 ### Build from Source
 ```bash
-git clone https://github.com/YOUR_USERNAME/srs
+git clone https://github.com/finnzink/srs
 cd srs
 go build -o srs
 ```

@@ -4,7 +4,7 @@ set -e
 # SRS Installation Script
 # Usage: curl -sSL https://raw.githubusercontent.com/USER/REPO/main/install.sh | bash
 
-REPO="YOUR_GITHUB_USERNAME/srs"  # Update this when you push to GitHub
+REPO="finnzink/srs"
 INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="srs"
 
