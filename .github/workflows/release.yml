@@ -22,12 +22,20 @@ jobs:
     
     - name: Build binaries
       run: |
+        # Get version info
+        VERSION=${GITHUB_REF#refs/tags/}
+        COMMIT=${GITHUB_SHA::8}
+        BUILD_TIME=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
+        
+        # Build flags with version info
+        LDFLAGS="-X 'main.Version=${VERSION}' -X 'main.GitCommit=${COMMIT}' -X 'main.BuildTime=${BUILD_TIME}'"
+        
         # Build for different platforms
-        GOOS=linux GOARCH=amd64 go build -o srs-linux-amd64 .
-        GOOS=linux GOARCH=arm64 go build -o srs-linux-arm64 .
-        GOOS=darwin GOARCH=amd64 go build -o srs-darwin-amd64 .
-        GOOS=darwin GOARCH=arm64 go build -o srs-darwin-arm64 .
-        GOOS=windows GOARCH=amd64 go build -o srs-windows-amd64.exe .
+        GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o srs-linux-amd64 .
+        GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o srs-linux-arm64 .
+        GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o srs-darwin-amd64 .
+        GOOS=darwin GOARCH=arm64 go build -ldflags="$LDFLAGS" -o srs-darwin-arm64 .
+        GOOS=windows GOARCH=amd64 go build -ldflags="$LDFLAGS" -o srs-windows-amd64.exe .
         
         # Make them executable
         chmod +x srs-*

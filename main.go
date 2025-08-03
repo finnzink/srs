@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -23,9 +24,12 @@ COMMANDS:
     list [DECK]         List all cards in deck with due dates
     stats [DECK]        Show deck statistics
     due [DECK]          Show number of due cards
+    update              Update to the latest version
+    version             Show version information
 
 OPTIONS:
     -h, --help          Show this help message
+    -v, --version       Show version information
 
 EXAMPLES:
     srs review               # Review due cards in current directory
@@ -49,9 +53,11 @@ CARD FORMAT:
 `
 
 func main() {
-	var help bool
+	var help, version bool
 	flag.BoolVar(&help, "h", false, "Show help")
 	flag.BoolVar(&help, "help", false, "Show help")
+	flag.BoolVar(&version, "v", false, "Show version")
+	flag.BoolVar(&version, "version", false, "Show version")
 	flag.Usage = func() {
 		fmt.Print(usage)
 	}
@@ -59,6 +65,11 @@ func main() {
 
 	if help {
 		flag.Usage()
+		return
+	}
+
+	if version {
+		printVersion()
 		return
 	}
 
@@ -94,6 +105,9 @@ func main() {
 
 	switch command {
 	case "review":
+		// Check for updates before starting review (non-blocking)
+		go checkForUpdates()
+		
 		err := reviewCommand(deckPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -123,6 +137,14 @@ func main() {
 		}
 	case "due":
 		err := dueCommand(deckPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+	case "version":
+		printVersion()
+	case "update":
+		err := updateCommand()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
@@ -235,6 +257,24 @@ func dueCommand(deckPath string) error {
 
 	dueCards := getDueCards(cards)
 	fmt.Printf("%d\n", len(dueCards))
+	return nil
+}
+
+func updateCommand() error {
+	fmt.Println("Updating SRS to the latest version...")
+	
+	// Download and run the install script
+	cmd := exec.Command("bash", "-c", 
+		"curl -sSL https://raw.githubusercontent.com/finnzink/srs/main/install.sh | bash")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("update failed: %v", err)
+	}
+	
+	fmt.Println("✅ Update completed successfully!")
 	return nil
 }
 
