@@ -50,6 +50,9 @@ jobs:
         COMMIT=${GITHUB_SHA::8}
         BUILD_TIME=$(date -u '+%Y-%m-%d %H:%M:%S UTC')
         
+        # Export VERSION for use in next step
+        echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+        
         # Build flags with version info
         LDFLAGS="-X 'main.Version=${VERSION}' -X 'main.GitCommit=${COMMIT}' -X 'main.BuildTime=${BUILD_TIME}'"
         
@@ -66,8 +69,8 @@ jobs:
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: "v$(date -u '+%Y%m%d')-${GITHUB_SHA::8}"
-        name: "Release v$(date -u '+%Y%m%d')-${GITHUB_SHA::8}"
+        tag_name: ${{ env.RELEASE_VERSION }}
+        name: "Release ${{ env.RELEASE_VERSION }}"
         files: |
           srs-linux-amd64
           srs-linux-arm64
