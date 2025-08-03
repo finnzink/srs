@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/open-spaced-repetition/go-fsrs/v3"
@@ -21,9 +20,10 @@ USAGE:
 COMMANDS:
     review [DECK]       Start reviewing due cards (default: current directory)
     rate CARD RATING    Rate a specific card (1=Again, 2=Hard, 3=Good, 4=Easy)
-    list [DECK]         List all cards in deck with due dates
+    list [DECK]         Show deck tree with due dates and cards
     stats [DECK]        Show deck statistics
     due [DECK]          Show number of due cards
+    config              Create default config file (~/.srsrc)
     update              Update to the latest version
     version             Show version information
 
@@ -32,10 +32,12 @@ OPTIONS:
     -v, --version       Show version information
 
 EXAMPLES:
-    srs review               # Review due cards in current directory
-    srs review ./spanish     # Review cards in spanish directory  
+    srs config               # Create default config file
+    srs review               # Review due cards (uses default deck)
+    srs review spanish       # Review cards in 'spanish' deck alias
+    srs list                 # Show deck tree with due dates
     srs rate math/calc.md 3  # Rate a specific card as "Good"
-    srs list                 # List all cards in current directory
+    srs list ./math          # Show tree for math deck
     srs stats ./math         # Show statistics for math deck
     srs due                  # Show number of due cards
 
@@ -81,26 +83,35 @@ func main() {
 	}
 
 	command := args[0]
+	
+	// Load config
+	config, err := loadConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: Failed to load config: %v\n", err)
+		config = &Config{Decks: make(map[string]string)}
+	}
+	
 	var deckPath string
-
 	if len(args) > 1 {
 		deckPath = args[1]
 	} else {
 		deckPath = "."
 	}
 
-	// Convert to absolute path
-	absPath, err := filepath.Abs(deckPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Invalid path %s: %v\n", deckPath, err)
-		os.Exit(1)
-	}
-	deckPath = absPath
+	// Resolve deck path using config (unless it's a command that doesn't need a deck)
+	if command != "config" && command != "version" && command != "update" {
+		resolvedPath, err := resolveDeckPath(deckPath, config)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: Invalid path %s: %v\n", deckPath, err)
+			os.Exit(1)
+		}
+		deckPath = resolvedPath
 
-	// Check if path exists
-	if _, err := os.Stat(deckPath); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "Error: Path %s does not exist\n", deckPath)
-		os.Exit(1)
+		// Check if path exists
+		if _, err := os.Stat(deckPath); os.IsNotExist(err) {
+			fmt.Fprintf(os.Stderr, "Error: Path %s does not exist\n", deckPath)
+			os.Exit(1)
+		}
 	}
 
 	switch command {
@@ -124,7 +135,7 @@ func main() {
 			os.Exit(1)
 		}
 	case "list":
-		err := listCommand(deckPath)
+		err := statusCommand(deckPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
@@ -137,6 +148,12 @@ func main() {
 		}
 	case "due":
 		err := dueCommand(deckPath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+	case "config":
+		err := createDefaultConfig()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
@@ -172,40 +189,6 @@ func reviewCommand(deckPath string) error {
 	return session.Start()
 }
 
-func listCommand(deckPath string) error {
-	cards, err := findCards(deckPath)
-	if err != nil {
-		return fmt.Errorf("failed to load cards: %v", err)
-	}
-
-	if len(cards) == 0 {
-		fmt.Printf("No cards found in %s\n", deckPath)
-		return nil
-	}
-
-	fmt.Printf("Cards in %s:\n\n", deckPath)
-	for _, card := range cards {
-		relPath, _ := filepath.Rel(deckPath, card.FilePath)
-		due := "Due now"
-		if card.FSRSCard.Due.After(time.Now()) {
-			due = fmt.Sprintf("Due %s", card.FSRSCard.Due.Format("2006-01-02 15:04"))
-		}
-		
-		questionPreview := strings.ReplaceAll(card.Question, "\n", " ")
-		questionPreview = strings.TrimSpace(questionPreview)
-		// Remove markdown formatting for preview
-		questionPreview = strings.ReplaceAll(questionPreview, "#", "")
-		questionPreview = strings.TrimSpace(questionPreview)
-		if len(questionPreview) > 50 {
-			questionPreview = questionPreview[:50] + "..."
-		}
-		
-		fmt.Printf("%-30s %s\n", relPath, due)
-		fmt.Printf("  %s\n\n", questionPreview)
-	}
-
-	return nil
-}
 
 func statsCommand(deckPath string) error {
 	cards, err := findCards(deckPath)
