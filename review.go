@@ -31,19 +31,39 @@ func (rs *ReviewSession) reviewCard(card *Card) error {
 	
 	PrintMarkdown(card.Question)
 	
-	fmt.Printf("\n[Press Enter to show answer...] ")
-	
 	reader := bufio.NewReader(os.Stdin)
-	reader.ReadLine()
+	var userAnswer string
+	
+	// Ask if user wants to type an answer
+	fmt.Printf("\nType your answer? (y/n or just press Enter to skip): ")
+	input, _ := reader.ReadString('\n')
+	input = strings.TrimSpace(strings.ToLower(input))
+	
+	if input == "y" || input == "yes" {
+		fmt.Printf("\nYour answer:\n> ")
+		userAnswer, _ = reader.ReadString('\n')
+		userAnswer = strings.TrimSpace(userAnswer)
+		fmt.Printf("\n[Press Enter to show correct answer...]")
+		reader.ReadLine()
+	} else {
+		fmt.Printf("\n[Press Enter to show answer...]")
+		reader.ReadLine()
+	}
 	
 	fmt.Printf("\n")
 	
+	// Show the correct answer
 	PrintMarkdown(card.Answer)
 	
 	fmt.Printf("\n")
 	
+	// If user typed an answer, show it for comparison
+	if userAnswer != "" {
+		fmt.Printf("--- Your answer ---\n%s\n\n", userAnswer)
+	}
+	
 	for {
-		fmt.Printf("\n1=Again  2=Hard  3=Good  4=Easy  e=Edit  q=Quit\n> ")
+		fmt.Printf("1=Again  2=Hard  3=Good  4=Easy  e=Edit  q=Quit\n> ")
 		
 		input, _ := reader.ReadString('\n')
 		input = strings.TrimSpace(input)
@@ -58,6 +78,9 @@ func (rs *ReviewSession) reviewCard(card *Card) error {
 		case "4":
 			return rs.updateCard(card, fsrs.Easy)
 		case "e", "E":
+			// Count lines displayed so far for clearing
+			linesDisplayed := rs.countDisplayedLines(card, userAnswer)
+			
 			err := editCard(card)
 			if err != nil {
 				fmt.Printf("Error editing card: %v\n", err)
@@ -69,12 +92,9 @@ func (rs *ReviewSession) reviewCard(card *Card) error {
 				} else {
 					// Update the card in the session
 					rs.cards[rs.current] = updatedCard
-					// Show the updated question and answer
-					fmt.Printf("\n--- Card updated ---\n\n")
-					PrintMarkdown(updatedCard.Question)
-					fmt.Printf("\n")
-					PrintMarkdown(updatedCard.Answer)
-					fmt.Printf("\n")
+					
+					// Clear the previous card display and redraw
+					rs.clearAndRedrawCard(updatedCard, userAnswer, linesDisplayed)
 				}
 			}
 		case "q":
@@ -99,30 +119,47 @@ func (rs *ReviewSession) updateCard(card *Card, rating fsrs.Rating) error {
 }
 
 func (rs *ReviewSession) Start() error {
-	if len(rs.cards) == 0 {
-		fmt.Println("No cards to review!")
-		return nil
+	// Use TUI for review sessions
+	return rs.StartTUI()
+}
+
+func (rs *ReviewSession) countDisplayedLines(card *Card, userAnswer string) int {
+	lines := 0
+	
+	// Count question lines (rough estimate)
+	lines += strings.Count(card.Question, "\n") + 2 // +2 for extra spacing
+	
+	// Count answer lines
+	lines += strings.Count(card.Answer, "\n") + 2 // +2 for extra spacing
+	
+	// Count user answer lines if present
+	if userAnswer != "" {
+		lines += strings.Count(userAnswer, "\n") + 3 // +3 for header and spacing
 	}
 	
-	fmt.Printf("Starting review session with %d cards\n", len(rs.cards))
+	// Add lines for the rating prompt
+	lines += 2
 	
-	for rs.current < len(rs.cards) {
-		card := rs.cards[rs.current]
-		
-		err := rs.reviewCard(card)
-		if err != nil {
-			if err.Error() == "quit" {
-				fmt.Printf("\nSession ended. Reviewed %d cards.\n", rs.current)
-				return nil
-			}
-			return err
-		}
-		
-		rs.current++
+	return lines
+}
+
+func (rs *ReviewSession) clearAndRedrawCard(card *Card, userAnswer string, linesToClear int) {
+	// Move cursor up and clear lines
+	for i := 0; i < linesToClear; i++ {
+		fmt.Printf("\033[1A\033[K") // Move up one line and clear it
 	}
 	
-	fmt.Printf("\nSession complete! Reviewed %d cards.\n", len(rs.cards))
-	return nil
+	// Redraw the card content
+	fmt.Printf("\n")
+	PrintMarkdown(card.Question)
+	fmt.Printf("\n")
+	PrintMarkdown(card.Answer)
+	fmt.Printf("\n")
+	
+	// Show user's answer again if they had one
+	if userAnswer != "" {
+		fmt.Printf("--- Your answer ---\n%s\n\n", userAnswer)
+	}
 }
 
 func getDueCards(cards []*Card) []*Card {
