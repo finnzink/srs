@@ -73,36 +73,48 @@ jobs:
           srs-darwin-arm64
           srs-windows-amd64.exe
         body: |
-          ## Installation
+          ## Easy Installation (Recommended)
           
-          Download the binary for your platform and make it executable:
+          ```bash
+          curl -sSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash
+          ```
+          
+          This installs to `~/.local/bin` (no sudo required).
+          
+          ## Manual Installation
+          
+          Download the binary for your platform and install to your user directory:
           
           ### Linux (x64)
           ```bash
-          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-linux-amd64 -o srs
-          chmod +x srs
-          sudo mv srs /usr/local/bin/
+          mkdir -p ~/.local/bin
+          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-linux-amd64 -o ~/.local/bin/srs
+          chmod +x ~/.local/bin/srs
+          export PATH="$HOME/.local/bin:$PATH"
           ```
           
           ### Linux (ARM64)
           ```bash
-          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-linux-arm64 -o srs
-          chmod +x srs
-          sudo mv srs /usr/local/bin/
+          mkdir -p ~/.local/bin
+          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-linux-arm64 -o ~/.local/bin/srs
+          chmod +x ~/.local/bin/srs
+          export PATH="$HOME/.local/bin:$PATH"
           ```
           
           ### macOS (Intel)
           ```bash
-          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-darwin-amd64 -o srs
-          chmod +x srs
-          sudo mv srs /usr/local/bin/
+          mkdir -p ~/.local/bin
+          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-darwin-amd64 -o ~/.local/bin/srs
+          chmod +x ~/.local/bin/srs
+          export PATH="$HOME/.local/bin:$PATH"
           ```
           
           ### macOS (Apple Silicon)
           ```bash
-          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-darwin-arm64 -o srs
-          chmod +x srs
-          sudo mv srs /usr/local/bin/
+          mkdir -p ~/.local/bin
+          curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/srs-darwin-arm64 -o ~/.local/bin/srs
+          chmod +x ~/.local/bin/srs
+          export PATH="$HOME/.local/bin:$PATH"
           ```
           
           ## Quick Start
