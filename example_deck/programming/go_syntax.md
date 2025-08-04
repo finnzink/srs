@@ -1,5 +1,5 @@
 <!-- FSRS: due:2025-08-02T21:53:45-07:00, stability:3.17, difficulty:5.28, elapsed_days:0, scheduled_days:0, reps:1, lapses:0, state:Learning -->
-## How do you declare a variable in Go?
+## How do you declare a variable in Go? Feeeeeeeeeeen
 
 ---
 

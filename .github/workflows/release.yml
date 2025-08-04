@@ -30,6 +30,9 @@ jobs:
         go mod tidy
         go build -o srs .
         ./srs version
+    
+    - name: Run tests
+      run: go test -v ./...
 
   release:
     runs-on: ubuntu-latest

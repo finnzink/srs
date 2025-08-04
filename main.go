@@ -18,12 +18,12 @@ USAGE:
     srs [OPTIONS] COMMAND [ARGS...]
 
 COMMANDS:
-    review [DECK]       Start reviewing due cards (default: current directory)
+    review [SUBDECK]    Start reviewing due cards from base deck or subdirectory
     rate CARD RATING    Rate a specific card (1=Again, 2=Hard, 3=Good, 4=Easy)
-    list [DECK]         Show deck tree with due dates and cards
-    stats [DECK]        Show deck statistics
-    due [DECK]          Show number of due cards
-    config              Create default config file (~/.srsrc)
+    list [SUBDECK]      Show deck tree with due dates and cards
+    stats [SUBDECK]     Show deck statistics
+    due [SUBDECK]       Show number of due cards
+    config              Set up base deck directory
     update              Update to the latest version
     version             Show version information
 
@@ -32,14 +32,23 @@ OPTIONS:
     -v, --version       Show version information
 
 EXAMPLES:
-    srs config               # Create default config file
-    srs review               # Review due cards (uses default deck)
-    srs review spanish       # Review cards in 'spanish' deck alias
-    srs list                 # Show deck tree with due dates
-    srs rate math/calc.md 3  # Rate a specific card as "Good"
-    srs list ./math          # Show tree for math deck
-    srs stats ./math         # Show statistics for math deck
-    srs due                  # Show number of due cards
+    srs config                    # Set up your base deck directory
+    srs review                    # Review all cards from base deck
+    srs review spanish            # Review cards from spanish subdirectory
+    srs review spanish/grammar    # Review from nested subdirectories
+    srs list                      # Show tree for entire base deck
+    srs list spanish              # Show tree for spanish subdirectory
+    srs stats spanish/grammar     # Show statistics for grammar subdirectory
+    srs due                       # Show due cards count for entire deck
+    srs rate spanish/verb.md 3    # Rate a specific card as "Good"
+
+SETUP:
+    On first run, you'll be prompted to choose your base deck directory.
+    All subdirectories will be relative to this base path.
+    
+    Example: If your base deck is ~/flashcards, then:
+    - 'srs review spanish' uses ~/flashcards/spanish
+    - 'srs review spanish/grammar' uses ~/flashcards/spanish/grammar
 
 CARD FORMAT:
     Cards are markdown files with FSRS metadata:
@@ -88,7 +97,23 @@ func main() {
 	config, err := loadConfig()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: Failed to load config: %v\n", err)
-		config = &Config{Decks: make(map[string]string)}
+		config = &Config{}
+	}
+	
+	// Check if this is first run (no base deck configured) and command needs it
+	if config.BaseDeckPath == "" && command != "config" && command != "version" && command != "update" {
+		fmt.Println("No base deck configured. Let's set one up first!")
+		err := promptForBaseDeck()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error setting up base deck: %v\n", err)
+			os.Exit(1)
+		}
+		// Reload config after setup
+		config, err = loadConfig()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error reloading config: %v\n", err)
+			os.Exit(1)
+		}
 	}
 	
 	var deckPath string
@@ -153,7 +178,7 @@ func main() {
 			os.Exit(1)
 		}
 	case "config":
-		err := createDefaultConfig()
+		err := promptForBaseDeck()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
