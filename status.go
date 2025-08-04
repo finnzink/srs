@@ -202,12 +202,20 @@ func statusCommand(deckPath string) error {
 		return fmt.Errorf("failed to build deck tree: %v", err)
 	}
 	
-	// Print header
-	fmt.Printf("Deck: %s\n", deckPath)
+	// Get all cards for detailed stats
+	cards, err := findCards(deckPath)
+	if err != nil {
+		return fmt.Errorf("failed to load cards: %v", err)
+	}
 	
-	// Count totals
+	// Count totals and states
 	totalCards, dueCards := countCards(tree)
-	fmt.Printf("Cards: %d total, %d due\n\n", totalCards, dueCards)
+	new, learning, review, relearning := countCardStates(cards)
+	
+	// Print header with comprehensive stats
+	fmt.Printf("Deck: %s\n", deckPath)
+	fmt.Printf("Cards: %d total, %d due | %d new, %d learning, %d review, %d relearning\n\n", 
+		totalCards, dueCards, new, learning, review, relearning)
 	
 	// Print the tree
 	if totalCards == 0 {
@@ -218,6 +226,22 @@ func statusCommand(deckPath string) error {
 	printDeckTree(tree, "", true)
 	
 	return nil
+}
+
+func countCardStates(cards []*Card) (new, learning, review, relearning int) {
+	for _, card := range cards {
+		switch StateToString(card.FSRSCard.State) {
+		case "New":
+			new++
+		case "Learning":
+			learning++
+		case "Review":
+			review++
+		case "Relearning":
+			relearning++
+		}
+	}
+	return new, learning, review, relearning
 }
 
 func countCards(node *DeckNode) (total, due int) {

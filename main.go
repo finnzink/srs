@@ -5,11 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strconv"
-	"time"
-
-	"github.com/open-spaced-repetition/go-fsrs/v3"
 )
 
 const usage = `srs - A Unix-style spaced repetition system
@@ -18,29 +13,25 @@ USAGE:
     srs [OPTIONS] COMMAND [ARGS...]
 
 COMMANDS:
-    review [SUBDECK]    Start reviewing due cards from base deck or subdirectory
-    rate CARD RATING    Rate a specific card (1=Again, 2=Hard, 3=Good, 4=Easy)
-    list [SUBDECK]      Show deck tree with due dates and cards
-    stats [SUBDECK]     Show deck statistics
-    due [SUBDECK]       Show number of due cards
-    config              Set up base deck directory
-    update              Update to the latest version
-    version             Show version information
+    review [SUBDECK] [RATING]  Show next card (turn-based) or rate current card
+    list [SUBDECK]             Show deck tree with due dates and stats
+    config                     Set up base deck directory
+    update                     Update to the latest version
+    version                    Show version information
 
 OPTIONS:
-    -h, --help          Show this help message
-    -v, --version       Show version information
+    -i, --interactive          Use interactive TUI mode for review
+    -h, --help                 Show this help message
+    -v, --version              Show version information
 
 EXAMPLES:
-    srs config                    # Set up your base deck directory
-    srs review                    # Review all cards from base deck
-    srs review spanish            # Review cards from spanish subdirectory
-    srs review spanish/grammar    # Review from nested subdirectories
-    srs list                      # Show tree for entire base deck
-    srs list spanish              # Show tree for spanish subdirectory
-    srs stats spanish/grammar     # Show statistics for grammar subdirectory
-    srs due                       # Show due cards count for entire deck
-    srs rate spanish/verb.md 3    # Rate a specific card as "Good"
+    srs config                 # Set up your base deck directory
+    srs review                 # Show next due card (turn-based)
+    srs review spanish         # Show next due card from spanish subdirectory
+    srs review spanish 3       # Rate current card as "Good" and show next
+    srs review -i              # Start interactive TUI review mode
+    srs list                   # Show tree with due dates and deck stats
+    srs list spanish           # Show tree for spanish subdirectory
 
 CARD FORMAT:
     Cards are markdown files:
@@ -67,11 +58,13 @@ Guidelines for creating excellent flashcards:
 `
 
 func main() {
-	var help, version bool
+	var help, version, interactive bool
 	flag.BoolVar(&help, "h", false, "Show help")
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&version, "v", false, "Show version")
 	flag.BoolVar(&version, "version", false, "Show version")
+	flag.BoolVar(&interactive, "i", false, "Use interactive TUI mode for review")
+	flag.BoolVar(&interactive, "interactive", false, "Use interactive TUI mode for review")
 	flag.Usage = func() {
 		fmt.Print(usage)
 		
@@ -130,10 +123,35 @@ func main() {
 	}
 	
 	var deckPath string
-	if len(args) > 1 {
-		deckPath = args[1]
+	var rating string
+	
+	// Special handling for review command to distinguish between subdeck and rating
+	if command == "review" {
+		if len(args) == 3 {
+			// srs review [subdeck] [rating]
+			deckPath = args[1]
+			rating = args[2]
+		} else if len(args) == 2 {
+			// Check if second arg is a rating (1-4) or a subdeck path
+			if args[1] == "1" || args[1] == "2" || args[1] == "3" || args[1] == "4" {
+				// srs review [rating] - no subdeck specified
+				deckPath = "."
+				rating = args[1]
+			} else {
+				// srs review [subdeck] - no rating specified
+				deckPath = args[1]
+			}
+		} else {
+			// srs review - no subdeck or rating specified
+			deckPath = "."
+		}
 	} else {
-		deckPath = "."
+		// For other commands, use normal parsing
+		if len(args) > 1 {
+			deckPath = args[1]
+		} else {
+			deckPath = "."
+		}
 	}
 
 	// Resolve deck path using config (unless it's a command that doesn't need a deck)
@@ -157,35 +175,13 @@ func main() {
 		// Check for updates before starting review (non-blocking)
 		go checkForUpdates()
 		
-		err := reviewCommand(deckPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
-	case "rate":
-		if len(args) < 3 {
-			fmt.Fprintf(os.Stderr, "Error: rate command requires card path and rating\nUsage: srs rate CARD RATING\n")
-			os.Exit(1)
-		}
-		err := rateCommand(args[1], args[2])
+		err := reviewCommand(deckPath, rating, interactive)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
 	case "list":
 		err := statusCommand(deckPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
-	case "stats":
-		err := statsCommand(deckPath)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
-	case "due":
-		err := dueCommand(deckPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
@@ -211,7 +207,7 @@ func main() {
 	}
 }
 
-func reviewCommand(deckPath string) error {
+func reviewCommand(deckPath, rating string, interactive bool) error {
 	cards, err := findCards(deckPath)
 	if err != nil {
 		return fmt.Errorf("failed to load cards: %v", err)
@@ -224,62 +220,16 @@ func reviewCommand(deckPath string) error {
 	}
 
 	session := NewReviewSession(dueCards)
-	return session.Start()
+	
+	if interactive {
+		// Use TUI mode
+		return session.Start()
+	}
+	
+	// Turn-based mode
+	return session.StartTurnBased(rating)
 }
 
-
-func statsCommand(deckPath string) error {
-	cards, err := findCards(deckPath)
-	if err != nil {
-		return fmt.Errorf("failed to load cards: %v", err)
-	}
-
-	if len(cards) == 0 {
-		fmt.Printf("No cards found in %s\n", deckPath)
-		return nil
-	}
-
-	total := len(cards)
-	due := len(getDueCards(cards))
-	new := 0
-	learning := 0
-	review := 0
-	relearning := 0
-
-	for _, card := range cards {
-		switch StateToString(card.FSRSCard.State) {
-		case "New":
-			new++
-		case "Learning":
-			learning++
-		case "Review":
-			review++
-		case "Relearning":
-			relearning++
-		}
-	}
-
-	fmt.Printf("Deck statistics for %s:\n\n", deckPath)
-	fmt.Printf("Total cards:    %d\n", total)
-	fmt.Printf("Due cards:      %d\n", due)
-	fmt.Printf("New cards:      %d\n", new)
-	fmt.Printf("Learning cards: %d\n", learning)
-	fmt.Printf("Review cards:   %d\n", review)
-	fmt.Printf("Relearning:     %d\n", relearning)
-
-	return nil
-}
-
-func dueCommand(deckPath string) error {
-	cards, err := findCards(deckPath)
-	if err != nil {
-		return fmt.Errorf("failed to load cards: %v", err)
-	}
-
-	dueCards := getDueCards(cards)
-	fmt.Printf("%d\n", len(dueCards))
-	return nil
-}
 
 func updateCommand() error {
 	fmt.Println("Updating SRS to the latest version...")
@@ -299,69 +249,3 @@ func updateCommand() error {
 	return nil
 }
 
-func rateCommand(cardPath, ratingStr string) error {
-	// Convert rating string to int
-	rating, err := strconv.Atoi(ratingStr)
-	if err != nil {
-		return fmt.Errorf("invalid rating '%s': must be 1-4", ratingStr)
-	}
-
-	// Validate rating range
-	if rating < 1 || rating > 4 {
-		return fmt.Errorf("invalid rating %d: must be 1-4", rating)
-	}
-
-	// Convert to FSRS rating
-	var fsrsRating fsrs.Rating
-	switch rating {
-	case 1:
-		fsrsRating = fsrs.Again
-	case 2:
-		fsrsRating = fsrs.Hard
-	case 3:
-		fsrsRating = fsrs.Good
-	case 4:
-		fsrsRating = fsrs.Easy
-	}
-
-	// Get absolute path
-	absPath, err := filepath.Abs(cardPath)
-	if err != nil {
-		return fmt.Errorf("invalid path %s: %v", cardPath, err)
-	}
-
-	// Check if file exists
-	if _, err := os.Stat(absPath); os.IsNotExist(err) {
-		return fmt.Errorf("card file %s does not exist", absPath)
-	}
-
-	// Parse the card
-	card, err := parseCard(absPath)
-	if err != nil {
-		return fmt.Errorf("failed to parse card %s: %v", absPath, err)
-	}
-
-	// Create a scheduler
-	params := fsrs.DefaultParam()
-	scheduler := fsrs.NewFSRS(params)
-
-	// Apply the rating
-	now := time.Now()
-	schedulingCards := scheduler.Repeat(card.FSRSCard, now)
-	selectedInfo := schedulingCards[fsrsRating]
-	
-	card.FSRSCard = selectedInfo.Card
-	card.ReviewLog = append(card.ReviewLog, selectedInfo.ReviewLog)
-
-	// Update the card file
-	err = card.updateFSRSMetadata()
-	if err != nil {
-		return fmt.Errorf("failed to update card metadata: %v", err)
-	}
-
-	fmt.Printf("Card rated as %s. Next due: %s\n", 
-		map[int]string{1: "Again", 2: "Hard", 3: "Good", 4: "Easy"}[rating],
-		card.FSRSCard.Due.Format("2006-01-02 15:04"))
-
-	return nil
-}

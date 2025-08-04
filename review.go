@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -121,6 +123,88 @@ func (rs *ReviewSession) updateCard(card *Card, rating fsrs.Rating) error {
 func (rs *ReviewSession) Start() error {
 	// Use TUI for review sessions
 	return rs.StartTUI()
+}
+
+func (rs *ReviewSession) StartTurnBased(rating string) error {
+	// If rating is provided, rate the current card first
+	if rating != "" {
+		if rs.current >= len(rs.cards) {
+			fmt.Println("No cards available to rate.")
+			return nil
+		}
+		
+		// Parse and validate rating
+		ratingInt, err := strconv.Atoi(rating)
+		if err != nil || ratingInt < 1 || ratingInt > 4 {
+			return fmt.Errorf("invalid rating '%s': must be 1-4", rating)
+		}
+		
+		// Convert to FSRS rating
+		var fsrsRating fsrs.Rating
+		switch ratingInt {
+		case 1:
+			fsrsRating = fsrs.Again
+		case 2:
+			fsrsRating = fsrs.Hard
+		case 3:
+			fsrsRating = fsrs.Good
+		case 4:
+			fsrsRating = fsrs.Easy
+		}
+		
+		// Rate the current card
+		currentCard := rs.cards[rs.current]
+		err = rs.updateCard(currentCard, fsrsRating)
+		if err != nil {
+			return fmt.Errorf("failed to rate card: %v", err)
+		}
+		
+		fmt.Printf("Card rated as %s.\n", 
+			map[int]string{1: "Again", 2: "Hard", 3: "Good", 4: "Easy"}[ratingInt])
+		
+		// Move to next card
+		rs.current++
+	}
+	
+	// Show the next due card
+	if rs.current >= len(rs.cards) {
+		fmt.Println("No more cards due for review!")
+		return nil
+	}
+	
+	card := rs.cards[rs.current]
+	
+	// Display the card
+	fmt.Printf("\nCard %d of %d:\n\n", rs.current+1, len(rs.cards))
+	PrintMarkdown(card.Question)
+	fmt.Printf("\n---\n\n")
+	PrintMarkdown(card.Answer)
+	
+	// Show rating command
+	deckPathFromCard := strings.TrimSuffix(card.FilePath, filepath.Base(card.FilePath))
+	if deckPathFromCard != "" {
+		deckPathFromCard = strings.TrimSuffix(deckPathFromCard, "/")
+		// Extract just the subdeck name relative to base deck
+		config, _ := loadConfig()
+		if config != nil && config.BaseDeckPath != "" {
+			if rel, err := filepath.Rel(config.BaseDeckPath, deckPathFromCard); err == nil && rel != "." {
+				deckPathFromCard = rel
+			} else {
+				deckPathFromCard = ""
+			}
+		} else {
+			deckPathFromCard = ""
+		}
+	}
+	
+	if deckPathFromCard != "" {
+		fmt.Printf("\nTo rate: srs review %s [1-4]\n", deckPathFromCard)
+	} else {
+		fmt.Printf("\nTo rate: srs review [1-4]\n")
+	}
+	fmt.Printf("1=Again  2=Hard  3=Good  4=Easy\n")
+	
+	return nil
 }
 
 func (rs *ReviewSession) countDisplayedLines(card *Card, userAnswer string) int {

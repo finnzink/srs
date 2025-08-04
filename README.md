@@ -64,9 +64,15 @@ go build -o srs
    EOF
    ```
 
-3. **Start reviewing:**
+3. **Configure your base deck:**
    ```bash
-   srs review my-deck
+   srs config  # Set my-deck as base directory
+   ```
+
+4. **Start reviewing:**
+   ```bash
+   srs review          # Turn-based mode (default)
+   srs -i review       # Interactive TUI mode
    ```
 
 ## Usage
@@ -74,11 +80,10 @@ go build -o srs
 ### Commands
 
 ```bash
-srs review [DECK]       # Start reviewing due cards
-srs rate CARD RATING    # Rate a specific card (1-4)
-srs list [DECK]         # List all cards with due dates
-srs stats [DECK]        # Show deck statistics  
-srs due [DECK]          # Show number of due cards
+srs review [DECK] [RATING]  # Show next card (turn-based) or rate current card
+srs list [DECK]             # Show deck tree with due dates and stats
+srs -i review [DECK]        # Interactive TUI mode (full-screen interface)
+srs config                  # Set up base deck directory
 ```
 
 ### Card Format
@@ -99,7 +104,7 @@ What is the time complexity of binary search?
 
 Binary search eliminates half of the remaining elements in each step:
 
-\`\`\`python
+```python
 def binary_search(arr, target):
     left, right = 0, len(arr) - 1
     while left <= right:
@@ -111,16 +116,32 @@ def binary_search(arr, target):
         else:
             right = mid - 1
     return -1
-\`\`\`
+```
 ```
 
-### Review Interface
+### Review Modes
 
-During review:
+**Turn-based Mode (Default):**
+```bash
+srs review          # Show next due card
+srs review 3        # Rate current card as "Good" and show next
+srs review spanish  # Review cards from spanish subdeck
+srs review spanish 2  # Rate card in spanish subdeck as "Hard"
+```
+
+**Interactive TUI Mode:**
+```bash
+srs -i review       # Full-screen interface with live typing
+```
+
+**Rating Scale:**
 - **1** = Again (forgot completely)
 - **2** = Hard (recalled with difficulty) 
 - **3** = Good (recalled correctly)
 - **4** = Easy (recalled easily)
+
+**Interactive Mode Keys:**
+- **1-4** = Rate card
 - **e** = Edit card in your editor
 - **q** = Quit session
 
@@ -159,31 +180,33 @@ my-decks/
 ## Slice Declaration
 
 Using make:
-\`\`\`go
+```go
 s := make([]int, 0, 10)  // length 0, capacity 10
-\`\`\`
-
-Slice literal:
-\`\`\`go
-s := []int{1, 2, 3, 4, 5}
-\`\`\`
-
-From array:
-\`\`\`go
-arr := [5]int{1, 2, 3, 4, 5}
-s := arr[1:4]  // elements 1, 2, 3
-\`\`\`
 ```
 
-### Command Line Rating
-```bash
-# Rate a card as "Good" without interactive review
-srs rate programming/go-slices.md 3
+Slice literal:
+```go
+s := []int{1, 2, 3, 4, 5}
+```
 
-# Rate multiple cards in a script
-for card in math/*.md; do
-    srs rate "$card" 4  # Mark all as "Easy"
-done
+From array:
+```go
+arr := [5]int{1, 2, 3, 4, 5}
+s := arr[1:4]  // elements 1, 2, 3
+```
+```
+
+### Batch Review with Scripts
+```bash
+# Review all cards in turn-based mode
+srs review
+
+# Review cards from specific subdeck
+srs review programming
+
+# Rate current card and continue (in a script)
+srs review programming 3  # Rate as "Good"
+srs review programming 4  # Rate next as "Easy"
 ```
 
 ### Integration with Git
