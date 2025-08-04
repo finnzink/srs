@@ -42,25 +42,28 @@ EXAMPLES:
     srs due                       # Show due cards count for entire deck
     srs rate spanish/verb.md 3    # Rate a specific card as "Good"
 
-SETUP:
-    On first run, you'll be prompted to choose your base deck directory.
-    All subdirectories will be relative to this base path.
-    
-    Example: If your base deck is ~/flashcards, then:
-    - 'srs review spanish' uses ~/flashcards/spanish
-    - 'srs review spanish/grammar' uses ~/flashcards/spanish/grammar
-
 CARD FORMAT:
-    Cards are markdown files with FSRS metadata:
+    Cards are markdown files:
     
-    <!-- FSRS: due:2024-01-01T00:00:00Z, stability:1.00, difficulty:5.00, ... -->
-    # Question
-    What is 2 + 2?
-    
+    What is the capital of Paris?
     ---
-    
-    # Answer
-    4
+    France
+
+Guidelines for creating excellent flashcards:
+• Be EXTREMELY concise - answers should be 1-2 sentences maximum!
+• Focus on core concepts, relationships, and techniques rather than trivia or isolated facts
+• Break complex ideas into smaller, atomic concepts
+• Ensure each card tests one specific idea (atomic)
+• Front of card should ask a specific question that prompts recall
+• Back of card should provide the shortest possible complete answer
+• CRITICAL: Keep answers as brief as possible while maintaining accuracy - aim for 10-25 words max
+• When referencing the author or source, use their specific name rather than general phrases like "the author" or "this text" which won't make sense months later when the user is reviewing the cards
+• Try to cite the author or the source when discussing something that is not an established concept but rather a new take or theory or prediction. 
+• The questions should be precise and unambiguously exclude alternative correct answers
+• The questions should encode ideas from multiple angles
+• Avoid yes/no question, or, in general, questions that admit a binary answer
+• Avoid unordered lists of items (especially if they contain many items)
+• If quantities are involved, they should be relative, or the unit of measure should be specified in the question
 `
 
 func main() {
@@ -71,6 +74,16 @@ func main() {
 	flag.BoolVar(&version, "version", false, "Show version")
 	flag.Usage = func() {
 		fmt.Print(usage)
+		
+		// Try to show current deck structure if configured
+		config, err := loadConfig()
+		if err == nil && config.BaseDeckPath != "" {
+			fmt.Printf("\nCURRENT DECK:\n")
+			err := statusCommand(config.BaseDeckPath)
+			if err != nil {
+				fmt.Printf("(Unable to load deck: %v)\n", err)
+			}
+		}
 	}
 	flag.Parse()
 
