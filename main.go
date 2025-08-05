@@ -36,9 +36,9 @@ EXAMPLES:
 CARD FORMAT:
     Cards are markdown files:
     
-    What is the capital of Paris?
+    What is the amortized time complexity for SortedList.add()?
     ---
-    France
+    O(∛n) per element when load factor is set to the cube root of n. Default load factor is 1,000 (grantjenks.com/docs/sortedcontainers/performance-scale.html)
 
 Guidelines for creating excellent flashcards:
 • Be EXTREMELY concise - answers should be 1-2 sentences maximum!
