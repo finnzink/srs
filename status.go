@@ -180,7 +180,13 @@ func getCardStatusInfo(card *Card) string {
 	// Calculate time until due
 	timeUntil := card.FSRSCard.Due.Sub(now)
 	
-	if timeUntil < 24*time.Hour {
+	if timeUntil < time.Minute {
+		seconds := int(timeUntil.Seconds())
+		return fmt.Sprintf(Yellow+"due in %ds"+Reset, seconds)
+	} else if timeUntil < time.Hour {
+		minutes := int(timeUntil.Minutes())
+		return fmt.Sprintf(Yellow+"due in %dm"+Reset, minutes)
+	} else if timeUntil < 24*time.Hour {
 		hours := int(timeUntil.Hours())
 		return fmt.Sprintf(Yellow+"due in %dh"+Reset, hours)
 	} else if timeUntil < 7*24*time.Hour {

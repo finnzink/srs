@@ -29,11 +29,11 @@ OPTIONS:
 EXAMPLES:
     srs config                 # Set up your base deck directory
     srs review                 # Show next due card (turn-based)
-    srs review -d spanish      # Show next due card from spanish subdirectory
-    srs review -r 3            # Rate current card as "Good" and show next
-    srs review -d spanish -r 3 # Rate current card in spanish subdeck as "Good"
-    srs review -i              # Start interactive TUI review mode
-    srs review -i -d spanish   # Start interactive TUI for spanish subdeck
+    srs -d spanish review      # Show next due card from spanish subdirectory
+    srs -r 3 review            # Rate current card as "Good" and show next
+    srs -d spanish -r 3 review # Rate current card in spanish subdeck as "Good"
+    srs -i review              # Start interactive TUI review mode
+    srs -i -d spanish review   # Start interactive TUI for spanish subdeck
     srs list                   # Show tree with due dates and deck stats
     srs list spanish           # Show tree for spanish subdirectory
 
@@ -42,7 +42,7 @@ CARD FORMAT:
     
     What is the amortized time complexity for SortedList.add()?
     ---
-    O(∛n) per element when load factor is set to the cube root of n. Default load factor is 1,000 (grantjenks.com/docs/sortedcontainers/performance-scale.html)
+    O(∛n) per element when load factor is set to the cube root of n. Default load factor is 1,000 ([grantjenks.com](https://grantjenks.com/docs/sortedcontainers/performance-scale.html))
 
 Guidelines for creating excellent flashcards:
 • Be EXTREMELY concise - answers should be 1-2 sentences maximum!
