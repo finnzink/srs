@@ -13,7 +13,7 @@ USAGE:
     srs [OPTIONS] COMMAND [ARGS...]
 
 COMMANDS:
-    review [SUBDECK] [RATING]  Show next card (turn-based) or rate current card
+    review                     Show next card (turn-based) or rate current card
     list [SUBDECK]             Show deck tree with due dates and stats
     config                     Set up base deck directory
     update                     Update to the latest version
@@ -21,15 +21,19 @@ COMMANDS:
 
 OPTIONS:
     -i, --interactive          Use interactive TUI mode for review
+    -d, --deck SUBDECK         Specify subdeck path for review command
+    -r, --rating RATING        Specify rating (1-4) for review command
     -h, --help                 Show this help message
     -v, --version              Show version information
 
 EXAMPLES:
     srs config                 # Set up your base deck directory
     srs review                 # Show next due card (turn-based)
-    srs review spanish         # Show next due card from spanish subdirectory
-    srs review spanish 3       # Rate current card as "Good" and show next
+    srs review -d spanish      # Show next due card from spanish subdirectory
+    srs review -r 3            # Rate current card as "Good" and show next
+    srs review -d spanish -r 3 # Rate current card in spanish subdeck as "Good"
     srs review -i              # Start interactive TUI review mode
+    srs review -i -d spanish   # Start interactive TUI for spanish subdeck
     srs list                   # Show tree with due dates and deck stats
     srs list spanish           # Show tree for spanish subdirectory
 
@@ -59,12 +63,17 @@ Guidelines for creating excellent flashcards:
 
 func main() {
 	var help, version, interactive bool
+	var subdeck, rating string
 	flag.BoolVar(&help, "h", false, "Show help")
 	flag.BoolVar(&help, "help", false, "Show help")
 	flag.BoolVar(&version, "v", false, "Show version")
 	flag.BoolVar(&version, "version", false, "Show version")
 	flag.BoolVar(&interactive, "i", false, "Use interactive TUI mode for review")
 	flag.BoolVar(&interactive, "interactive", false, "Use interactive TUI mode for review")
+	flag.StringVar(&subdeck, "d", "", "Subdeck path for review command")
+	flag.StringVar(&subdeck, "deck", "", "Subdeck path for review command")
+	flag.StringVar(&rating, "r", "", "Rating (1-4) for review command")
+	flag.StringVar(&rating, "rating", "", "Rating (1-4) for review command")
 	flag.Usage = func() {
 		fmt.Print(usage)
 		
@@ -123,30 +132,16 @@ func main() {
 	}
 	
 	var deckPath string
-	var rating string
 	
-	// Special handling for review command to distinguish between subdeck and rating
+	// Handle subdeck path
 	if command == "review" {
-		if len(args) == 3 {
-			// srs review [subdeck] [rating]
-			deckPath = args[1]
-			rating = args[2]
-		} else if len(args) == 2 {
-			// Check if second arg is a rating (1-4) or a subdeck path
-			if args[1] == "1" || args[1] == "2" || args[1] == "3" || args[1] == "4" {
-				// srs review [rating] - no subdeck specified
-				deckPath = "."
-				rating = args[1]
-			} else {
-				// srs review [subdeck] - no rating specified
-				deckPath = args[1]
-			}
+		if subdeck != "" {
+			deckPath = subdeck
 		} else {
-			// srs review - no subdeck or rating specified
 			deckPath = "."
 		}
 	} else {
-		// For other commands, use normal parsing
+		// For other commands, use positional argument
 		if len(args) > 1 {
 			deckPath = args[1]
 		} else {
