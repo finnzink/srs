@@ -1,0 +1,16 @@
+Test: command_performance
+Exit Code: 0
+Duration: 12.405041ms
+
+STDOUT:
+Deck: /var/folders/24/31_6v_896p52l4z8qpw795d80000gn/T/srs_integration_test_2185738370/test_decks
+Cards: 3 total, 3 due | 3 new, 0 learning, 0 review, 0 relearning
+
+└── basic_math/
+    ├── addition [31mdue now[0m
+    ├── division [31mdue now[0m
+    └── multiplication [31mdue now[0m
+
+
+STDERR:
+

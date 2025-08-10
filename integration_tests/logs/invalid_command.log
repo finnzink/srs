@@ -1,0 +1,70 @@
+Test: invalid_command
+Exit Code: 1
+Duration: 12.175166ms
+
+STDOUT:
+srs - A Unix-style spaced repetition system
+
+USAGE:
+    srs [OPTIONS] COMMAND [ARGS...]
+
+COMMANDS:
+    review                     Show next card (turn-based) or rate current card
+    list [SUBDECK]             Show deck tree with due dates and stats
+    config                     Set up base deck directory
+    mcp                        Start MCP server for AI integration
+    update                     Update to the latest version
+    version                    Show version information
+
+OPTIONS:
+    -i, --interactive          Use interactive TUI mode for review
+    -d, --deck SUBDECK         Specify subdeck path for review command
+    -r, --rating RATING        Specify rating (1-4) for review command
+    -h, --help                 Show this help message
+    -v, --version              Show version information
+
+EXAMPLES:
+    srs config                 # Set up your base deck directory
+    srs review                 # Show next due card (turn-based)
+    srs -d spanish review      # Show next due card from spanish subdirectory
+    srs -r 3 review            # Rate current card as "Good" and show next
+    srs -d spanish -r 3 review # Rate current card in spanish subdeck as "Good"
+    srs -i review              # Start interactive TUI review mode
+    srs -i -d spanish review   # Start interactive TUI for spanish subdeck
+    srs list                   # Show tree with due dates and deck stats
+    srs list spanish           # Show tree for spanish subdirectory
+
+CARD FORMAT:
+    Cards are markdown files:
+    
+    What is the amortized time complexity for SortedList.add()?
+    ---
+    O(∛n) per element when load factor is set to the cube root of n. Default load factor is 1,000 ([grantjenks.com](https://grantjenks.com/docs/sortedcontainers/performance-scale.html))
+
+Guidelines for creating excellent flashcards:
+• Be EXTREMELY concise - answers should be 1-2 sentences maximum!
+• Focus on core concepts, relationships, and techniques rather than trivia or isolated facts
+• Break complex ideas into smaller, atomic concepts
+• Ensure each card tests one specific idea (atomic)
+• Front of card should ask a specific question that prompts recall
+• Back of card should provide the shortest possible complete answer
+• CRITICAL: Keep answers as brief as possible while maintaining accuracy - aim for 10-25 words max
+• When referencing the author or source, use their specific name rather than general phrases like "the author" or "this text" which won't make sense months later when the user is reviewing the cards
+• Try to cite the author or the source when discussing something that is not an established concept but rather a new take or theory or prediction. 
+• The questions should be precise and unambiguously exclude alternative correct answers
+• The questions should encode ideas from multiple angles
+• Avoid yes/no question, or, in general, questions that admit a binary answer
+• Avoid unordered lists of items (especially if they contain many items)
+• If quantities are involved, they should be relative, or the unit of measure should be specified in the question
+
+CURRENT DECK:
+Deck: /var/folders/24/31_6v_896p52l4z8qpw795d80000gn/T/srs_integration_test_3071682541/test_decks
+Cards: 0 total, 0 due | 0 new, 0 learning, 0 review, 0 relearning
+
+No cards found in this deck.
+
+
+STDERR:
+Error: Unknown command 'invalid_command'
+
+

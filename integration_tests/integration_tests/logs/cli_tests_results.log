@@ -1,0 +1,16 @@
+=== RUN   TestVersionCommand
+--- PASS: TestVersionCommand (0.02s)
+=== RUN   TestConfigCommand
+--- PASS: TestConfigCommand (0.02s)
+=== RUN   TestListCommand
+--- PASS: TestListCommand (0.02s)
+=== RUN   TestListSpecificDeck
+--- PASS: TestListSpecificDeck (0.01s)
+=== RUN   TestListNonExistentDeck
+--- PASS: TestListNonExistentDeck (0.01s)
+=== RUN   TestCommandPerformance
+--- PASS: TestCommandPerformance (0.01s)
+=== RUN   TestInvalidCommand
+--- PASS: TestInvalidCommand (0.01s)
+PASS
+ok  	integration_tests/cli_tests	0.300s

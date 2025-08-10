@@ -1,0 +1,27 @@
+=== RUN   TestMCPServerStartup
+    mcp_server_test.go:27: MCP server started successfully
+--- PASS: TestMCPServerStartup (0.10s)
+=== RUN   TestMCPGetDueCards
+    mcp_server_test.go:78: Got MCP response with content: [map[text:map[deck_path:basic_math due_cards:[map[answer:4 difficulty:0 due:0001-01-01T00:00:00Z file_path:/var/folders/24/31_6v_896p52l4z8qpw795d80000gn/T/srs_integration_test_4010667250/test_decks/basic_math/addition.md question:What is 2 + 2? reps:0 stability:0 state:0] map[answer:5 difficulty:0 due:0001-01-01T00:00:00Z file_path:/var/folders/24/31_6v_896p52l4z8qpw795d80000gn/T/srs_integration_test_4010667250/test_decks/basic_math/division.md question:What is 15 ÷ 3? reps:0 stability:0 state:0] map[answer:12 difficulty:0 due:0001-01-01T00:00:00Z file_path:/var/folders/24/31_6v_896p52l4z8qpw795d80000gn/T/srs_integration_test_4010667250/test_decks/basic_math/multiplication.md question:What is 3 × 4? reps:0 stability:0 state:0]] due_count:3 total_cards:3] type:text]]
+    mcp_server_test.go:81: MCP get_due_cards test completed successfully
+--- PASS: TestMCPGetDueCards (0.11s)
+=== RUN   TestMCPGetDeckStats
+    mcp_server_test.go:124: MCP get_deck_stats test completed successfully
+--- PASS: TestMCPGetDeckStats (0.10s)
+=== RUN   TestMCPListDecks
+    mcp_server_test.go:170: MCP list_decks test completed successfully
+--- PASS: TestMCPListDecks (0.11s)
+=== RUN   TestMCPRateCard
+    mcp_server_test.go:214: MCP rate_card test completed successfully
+--- PASS: TestMCPRateCard (0.11s)
+=== RUN   TestMCPInvalidTool
+    mcp_server_test.go:248: MCP invalid tool test completed successfully
+--- PASS: TestMCPInvalidTool (0.10s)
+=== RUN   TestMCPInvalidParameters
+    mcp_server_test.go:285: MCP invalid parameters test completed successfully
+--- PASS: TestMCPInvalidParameters (0.11s)
+=== RUN   TestMCPConcurrentRequests
+    mcp_server_test.go:332: MCP concurrent requests test completed successfully
+--- PASS: TestMCPConcurrentRequests (0.14s)
+PASS
+ok  	integration_tests/mcp_tests	1.069s

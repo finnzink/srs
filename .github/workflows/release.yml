@@ -33,6 +33,23 @@ jobs:
     
     - name: Run tests
       run: go test -v ./...
+    
+    - name: Build test binary
+      run: go build -o srs-test .
+    
+    - name: Run integration tests
+      run: |
+        cd integration_tests
+        go mod init integration_tests || true
+        cd ..
+        ./integration_tests/run_tests.sh
+    
+    - name: Upload integration test logs
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: integration-test-logs
+        path: integration_tests/logs/
 
   release:
     runs-on: ubuntu-latest

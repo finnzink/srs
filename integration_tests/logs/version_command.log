@@ -1,0 +1,14 @@
+Test: version_command
+Exit Code: 0
+Duration: 21.893375ms
+
+STDOUT:
+srs version dev
+Git commit: unknown
+Built: unknown
+Go version: go1.23.11
+OS/Arch: darwin/arm64
+
+
+STDERR:
+

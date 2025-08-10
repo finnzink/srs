@@ -1,0 +1,26 @@
+=== RUN   TestCompleteCardLifecycle
+    workflow_test.go:83: DEBUG: MCP rate_card response: &{ID:580000 Result:map[content:[map[text:map[card_path:/var/folders/24/31_6v_896p52l4z8qpw795d80000gn/T/srs_integration_test_880220010/test_decks/basic_math/addition.md difficulty:3.2245015893713678 new_due_date:2025-08-25T23:25:59Z new_state:2 rating:4 reps:1 stability:15.69105 success:true] type:text]]] Error:<nil>}
+    workflow_test.go:87: DEBUG: Reading card from: /var/folders/24/31_6v_896p52l4z8qpw795d80000gn/T/srs_integration_test_880220010/test_decks/basic_math/addition.md
+    workflow_test.go:94: DEBUG: Card content after rating: <!-- FSRS: due:2025-08-25T23:25:59-07:00, stability:15.69, difficulty:3.22, elapsed_days:0, scheduled_days:16, reps:1, lapses:0, state:Review -->
+        What is 2 + 2?
+        ---
+        4
+    workflow_test.go:104: Complete card lifecycle test passed successfully
+--- PASS: TestCompleteCardLifecycle (0.13s)
+=== RUN   TestMultiDeckWorkflow
+    workflow_test.go:184: Multi-deck workflow test passed successfully
+--- PASS: TestMultiDeckWorkflow (0.13s)
+=== RUN   TestReviewProgressTracking
+    workflow_test.go:251: Review progress tracking test passed successfully
+--- PASS: TestReviewProgressTracking (0.15s)
+=== RUN   TestErrorRecovery
+    workflow_test.go:302: Malformed request handled: &{155000 <nil> <nil>}
+    workflow_test.go:304: Error recovery test passed successfully
+--- PASS: TestErrorRecovery (0.13s)
+=== RUN   TestPerformanceWithLargeDataset
+    workflow_test.go:346: List command took: 22.876791ms
+    workflow_test.go:374: MCP get_due_cards took: 900.791µs
+    workflow_test.go:384: Performance test passed successfully
+--- PASS: TestPerformanceWithLargeDataset (0.13s)
+PASS
+ok  	command-line-arguments	0.870s

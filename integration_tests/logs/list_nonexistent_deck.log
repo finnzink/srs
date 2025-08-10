@@ -1,0 +1,10 @@
+Test: list_nonexistent_deck
+Exit Code: 1
+Duration: 12.45175ms
+
+STDOUT:
+
+
+STDERR:
+Error: Path /var/folders/24/31_6v_896p52l4z8qpw795d80000gn/T/srs_integration_test_4233295673/test_decks/nonexistent does not exist
+
