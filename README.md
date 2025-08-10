@@ -1,17 +1,35 @@
 # SRS - Unix-style Spaced Repetition System
 
-A terminal-based spaced repetition system that follows Unix principles. Cards are stored as plain markdown files with FSRS metadata, making them git-friendly and easily editable.
+A terminal-based spaced repetition system with modular architecture, interactive TUI, and MCP server for AI integration.
 
 ## Features
 
 - 🧠 **FSRS Algorithm** - Uses the state-of-the-art Free Spaced Repetition Scheduler
 - 📝 **Markdown Cards** - Cards are plain markdown files with syntax highlighting
 - 📁 **Folder-based Decks** - Organize cards in directories, any structure you want
-- ⌨️ **Terminal Interface** - Clean, distraction-free review experience
-- ✏️ **Live Editing** - Edit cards during review with your preferred editor
-- 🔧 **Unix Philosophy** - Simple commands, plain text files, composable tools
+- ⌨️ **Interactive TUI** - Clean, full-screen review experience with live editing
+- 🤖 **MCP Server** - Programmatic access for AI agents and LLMs
+- 🔧 **Modular Architecture** - Shared core library for consistent behavior
+- 🧪 **Comprehensive Tests** - Well-tested core logic
 - 📊 **Git Integration** - Version control your learning with git
 - 🚀 **Cross-platform** - Linux, macOS, Windows
+
+## Architecture
+
+The SRS system is built with a modular architecture:
+
+```
+srs/
+├── core/          # Shared business logic library
+│   ├── card.go    # Card parsing and management
+│   ├── deck.go    # Deck operations and configuration
+│   ├── scheduler.go # FSRS scheduling logic
+│   └── types.go   # Shared types and interfaces
+├── tui/           # Terminal UI implementation
+├── mcp/           # MCP server for AI integration
+├── cmd/           # Command-line interface
+└── testdata/      # Test fixtures and examples
+```
 
 ## Installation
 
@@ -20,59 +38,38 @@ A terminal-based spaced repetition system that follows Unix principles. Cards ar
 curl -sSL https://raw.githubusercontent.com/finnzink/srs/main/install.sh | bash
 ```
 
-### Manual Download
-Download the binary for your platform from [releases](https://github.com/finnzink/srs/releases):
-
-**Linux:**
-```bash
-curl -L https://github.com/finnzink/srs/releases/latest/download/srs-linux-amd64 -o srs
-chmod +x srs
-sudo mv srs /usr/local/bin/
-```
-
-**macOS:**
-```bash
-curl -L https://github.com/finnzink/srs/releases/latest/download/srs-darwin-arm64 -o srs
-chmod +x srs
-sudo mv srs /usr/local/bin/
-```
-
 ### Build from Source
 ```bash
 git clone https://github.com/finnzink/srs
 cd srs
-go build -o srs
+
+# Build CLI
+cd cmd && go build -o ../srs
+
+# Build MCP server
+cd ../mcp && go build -o ../srs-mcp-server
 ```
 
 ## Quick Start
 
-1. **Create a deck directory:**
+1. **Configure your base deck:**
    ```bash
-   mkdir my-deck
+   ./srs config  # Set up your deck directory
    ```
 
 2. **Create your first card:**
    ```bash
-   cat > my-deck/example.md << 'EOF'
-   # What is the capital of France?
-   
+   cat > ~/flashcards/example.md << 'EOF'
+   What is the time complexity of binary search?
    ---
-   
-   # Paris
-   
-   The capital and largest city of France.
+   O(log n) - because we eliminate half the search space with each comparison.
    EOF
    ```
 
-3. **Configure your base deck:**
+3. **Start reviewing:**
    ```bash
-   srs config  # Set my-deck as base directory
-   ```
-
-4. **Start reviewing:**
-   ```bash
-   srs review          # Turn-based mode (default)
-   srs -i review       # Interactive TUI mode
+   ./srs review          # Interactive TUI mode
+   ./srs review spanish  # Review specific subdeck
    ```
 
 ## Usage
@@ -80,59 +77,20 @@ go build -o srs
 ### Commands
 
 ```bash
-srs review [DECK] [RATING]  # Show next card (turn-based) or rate current card
-srs list [DECK]             # Show deck tree with due dates and stats
-srs -i review [DECK]        # Interactive TUI mode (full-screen interface)
-srs config                  # Set up base deck directory
+./srs review [DECK]    # Start interactive review session
+./srs list [DECK]      # Show deck tree with due dates and stats
+./srs config           # Set up base deck directory
+./srs version          # Show version information
+./srs update           # Update to latest version
 ```
 
-### Card Format
+### Review Interface
 
-Cards are markdown files with optional FSRS metadata:
-
-```markdown
-<!-- FSRS: due:2024-01-01T00:00:00Z, stability:1.00, difficulty:5.00, ... -->
-# Question
-
-What is the time complexity of binary search?
-
----
-
-# Answer
-
-**O(log n)**
-
-Binary search eliminates half of the remaining elements in each step:
-
-```python
-def binary_search(arr, target):
-    left, right = 0, len(arr) - 1
-    while left <= right:
-        mid = (left + right) // 2
-        if arr[mid] == target:
-            return mid
-        elif arr[mid] < target:
-            left = mid + 1
-        else:
-            right = mid - 1
-    return -1
-```
-```
-
-### Review Modes
-
-**Turn-based Mode (Default):**
-```bash
-srs review          # Show next due card
-srs review 3        # Rate current card as "Good" and show next
-srs review spanish  # Review cards from spanish subdeck
-srs review spanish 2  # Rate card in spanish subdeck as "Hard"
-```
-
-**Interactive TUI Mode:**
-```bash
-srs -i review       # Full-screen interface with live typing
-```
+**Interactive TUI Mode (default):**
+- Type your answer before revealing the correct answer
+- Rate cards with 1-4 keys
+- Edit cards live with 'e' key
+- Navigate with arrow keys, quit with 'q'
 
 **Rating Scale:**
 - **1** = Again (forgot completely)
@@ -140,17 +98,32 @@ srs -i review       # Full-screen interface with live typing
 - **3** = Good (recalled correctly)
 - **4** = Easy (recalled easily)
 
-**Interactive Mode Keys:**
-- **1-4** = Rate card
-- **e** = Edit card in your editor
-- **q** = Quit session
+### Card Format
+
+Cards are simple markdown files:
+
+```markdown
+What is the time complexity of binary search?
+---
+O(log n) - because we eliminate half the search space with each comparison.
+```
+
+The system automatically manages FSRS metadata:
+
+```markdown
+<!-- FSRS: due:2025-01-15T10:30:00Z, stability:2.50, difficulty:5.00, elapsed_days:1, scheduled_days:3, reps:2, lapses:0, state:Review -->
+
+What is the time complexity of binary search?
+---
+O(log n) - because we eliminate half the search space with each comparison.
+```
 
 ### Deck Organization
 
 Organize your cards however you like:
 
 ```
-my-decks/
+flashcards/
 ├── programming/
 │   ├── algorithms/
 │   │   ├── sorting.md
@@ -169,77 +142,187 @@ my-decks/
         └── basics.md
 ```
 
-## Examples
+## MCP Server Integration
 
-### Programming Card
-```markdown
-# How do you declare a slice in Go?
+The MCP (Model Context Protocol) server enables AI agents to interact with your flashcards programmatically.
 
----
+### Start the MCP Server
 
-## Slice Declaration
-
-Using make:
-```go
-s := make([]int, 0, 10)  // length 0, capacity 10
-```
-
-Slice literal:
-```go
-s := []int{1, 2, 3, 4, 5}
-```
-
-From array:
-```go
-arr := [5]int{1, 2, 3, 4, 5}
-s := arr[1:4]  // elements 1, 2, 3
-```
-```
-
-### Batch Review with Scripts
 ```bash
-# Review all cards in turn-based mode
-srs review
-
-# Review cards from specific subdeck
-srs review programming
-
-# Rate current card and continue (in a script)
-srs review programming 3  # Rate as "Good"
-srs review programming 4  # Rate next as "Easy"
+./srs-mcp-server
 ```
 
-### Integration with Git
+### Available MCP Tools
+
+- **`srs/get_due_cards`** - Get cards that are due for review
+- **`srs/rate_card`** - Rate a card (1=Again, 2=Hard, 3=Good, 4=Easy)  
+- **`srs/get_deck_stats`** - Get statistics for a deck
+- **`srs/list_decks`** - List all available decks with statistics
+
+### Example MCP Usage
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "srs/get_due_cards",
+    "arguments": {
+      "deck_path": "spanish"
+    }
+  }
+}
+```
+
+```json
+{
+  "method": "tools/call", 
+  "params": {
+    "name": "srs/rate_card",
+    "arguments": {
+      "file_path": "spanish/verbs.md",
+      "rating": 3
+    }
+  }
+}
+```
+
+### AI Integration Use Cases
+
+- **Automated Review Sessions** - Have AI agents review cards based on performance
+- **Content Analysis** - Analyze card difficulty and suggest improvements
+- **Progress Tracking** - Generate learning analytics and insights
+- **Smart Scheduling** - AI-driven scheduling recommendations
+- **Bulk Operations** - Process multiple cards efficiently
+
+## Development
+
+### Running Tests
+
 ```bash
-# Version control your learning
-git add my-deck/
-git commit -m "Add new algorithm cards"
+# Test core library
+cd core && go test -v
 
-# Review what changed
-git log --oneline my-deck/
-
-# See FSRS progress over time
-git diff HEAD~10 my-deck/
+# Test all components  
+go test -v ./core/...
 ```
+
+### Project Structure
+
+- **core/**: Shared business logic, fully tested and reusable
+- **tui/**: Bubble Tea-based terminal interface
+- **mcp/**: Model Context Protocol server implementation
+- **cmd/**: Command-line interface using core library
+
+## Migration from Previous Version
+
+**⚠️ Breaking Changes:**
+
+This version removes the turn-based CLI review functionality in favor of a unified interactive experience.
+
+### What Changed
+- ✅ **Removed**: `srs review -r <rating>` turn-based workflow  
+- ✅ **New**: All reviews use interactive TUI interface
+- ✅ **New**: MCP server for AI integration
+- ✅ **New**: Modular architecture with shared core library
+- ✅ **New**: Comprehensive test suite
+- ✅ **Improved**: Better error handling and user experience
+
+### What Stayed the Same
+- Card format and FSRS metadata (fully compatible)
+- Deck organization and configuration
+- FSRS scheduling algorithm and behavior
+- Command-line interface for non-review operations
+- All your existing cards work without changes
+
+### Migration Steps
+
+1. **No action required** - your existing cards and configuration will work
+2. **Update workflows** - replace turn-based review scripts with interactive sessions
+3. **Consider AI integration** - explore MCP server capabilities for enhanced workflows
 
 ## Configuration
 
-The app respects standard Unix environment variables:
+Configuration is stored as JSON in your home directory:
 
+```json
+{
+  "base_deck_path": "/home/user/flashcards"
+}
+```
+
+Environment variables:
 - `EDITOR` - Your preferred text editor (default: vim)
 - `VISUAL` - Alternative editor variable
 
-## Why SRS?
+## Advanced Usage
 
-This tool was built for developers who want:
+### Review Specific Decks
 
-- **Simple text files** instead of proprietary databases
-- **Git integration** for versioning and syncing
-- **Terminal workflow** that fits into existing development environment
-- **Extensibility** through Unix pipes and scripts
-- **No vendor lock-in** - your data is portable markdown
+```bash
+./srs review programming        # Review programming cards
+./srs review spanish/grammar    # Review specific subdeck
+```
 
-Perfect for learning on remote development servers, SSH sessions, or anywhere you have a terminal.
+### Deck Statistics
+
+```bash
+./srs list                      # Show all decks with stats
+./srs list programming          # Show programming subdeck stats
+```
+
+### Integration with Git
+
+```bash
+# Version control your learning
+git add flashcards/
+git commit -m "Add new algorithm cards"
+
+# Review learning progress over time
+git log --oneline flashcards/
+git diff HEAD~10 flashcards/
+```
+
+## Best Practices
+
+### Creating Effective Cards
+
+- **Be concise** - Keep answers brief but complete
+- **One concept per card** - Atomic knowledge units
+- **Use active recall** - Frame as specific questions
+- **Include context** - Add examples or explanations when helpful
+- **Test edge cases** - Create cards for common mistakes
+
+### Example Cards
+
+**Programming Concept:**
+```markdown
+How do you declare a slice in Go?
+---
+Using `make()`: `s := make([]int, 0, 10)` (length 0, capacity 10)
+Or slice literal: `s := []int{1, 2, 3}`
+```
+
+**Algorithm:**
+```markdown
+What are the steps of quicksort?
+---
+1. Choose a pivot element
+2. Partition array around pivot
+3. Recursively sort left and right subarrays
+Time: O(n log n) average, O(n²) worst case
+```
+
+## Why This Architecture?
+
+This modular design provides:
+
+- **Consistency** - Same logic across TUI and MCP interfaces
+- **Testability** - Core logic is thoroughly tested
+- **Extensibility** - Easy to add new interfaces or features  
+- **AI Integration** - MCP server enables powerful AI workflows
+- **Maintainability** - Clean separation of concerns
+
+Perfect for developers who want both interactive review and programmatic access to their learning data.
 
 ## License
 
@@ -247,4 +330,12 @@ MIT License - see LICENSE file for details.
 
 ## Contributing
 
-Issues and pull requests welcome! This tool follows Unix philosophy: do one thing well, use plain text, be composable.
+Issues and pull requests welcome! 
+
+**Development Guidelines:**
+1. Core logic goes in `core/` package with tests
+2. Ensure both TUI and MCP server use shared core
+3. Follow existing patterns for error handling
+4. Add tests for new functionality
+
+This tool follows Unix philosophy: do one thing well, use plain text, and be composable.

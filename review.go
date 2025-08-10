@@ -162,6 +162,30 @@ func (rs *ReviewSession) StartTurnBased(rating string) error {
 		fmt.Printf("Card rated as %s.\n", 
 			map[int]string{1: "Again", 2: "Hard", 3: "Good", 4: "Easy"}[ratingInt])
 		
+		// Check all cards in the session to see if any have become due
+		// and add them to the end of the queue if they're not already in the remaining cards
+		now := time.Now()
+		remainingCards := rs.cards[rs.current+1:] // Cards we haven't reviewed yet
+		
+		for i := 0; i <= rs.current; i++ { // Check all cards we've seen so far
+			card := rs.cards[i]
+			if card.FSRSCard.Due.Before(now) || card.FSRSCard.Due.Equal(now) {
+				// Check if this card is already in the remaining queue
+				alreadyQueued := false
+				for _, remainingCard := range remainingCards {
+					if remainingCard.FilePath == card.FilePath {
+						alreadyQueued = true
+						break
+					}
+				}
+				
+				// If not already queued, add it to the end
+				if !alreadyQueued {
+					rs.cards = append(rs.cards, card)
+				}
+			}
+		}
+		
 		// Move to next card
 		rs.current++
 	}
