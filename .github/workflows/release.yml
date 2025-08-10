@@ -59,7 +59,7 @@ jobs:
         # Build flags with version info
         LDFLAGS="-X 'main.Version=${VERSION}' -X 'main.GitCommit=${COMMIT}' -X 'main.BuildTime=${BUILD_TIME}'"
         
-        # Build for different platforms with static linking
+        # Build unified binaries with MCP server included
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="$LDFLAGS" -o srs-linux-amd64 .
         CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags="$LDFLAGS" -o srs-linux-arm64 .
         CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags="$LDFLAGS" -o srs-darwin-amd64 .
@@ -81,6 +81,11 @@ jobs:
           srs-darwin-arm64
           srs-windows-amd64.exe
         body: |
+          ## What's New
+          
+          ✅ **MCP Server Built-In**: AI integration now included in single binary - no separate downloads needed!
+          ✅ **Claude Code Ready**: Use `srs mcp` command to start MCP server for AI agents
+          
           ## Easy Installation (Recommended)
           
           ```bash
@@ -137,5 +142,13 @@ jobs:
           
           # Start reviewing
           srs review my-deck
+          ```
+          
+          ## MCP Integration (New!)
+          ```bash
+          # Configure Claude Code to use SRS
+          claude mcp add srs -- /path/to/srs mcp
+          
+          # Now AI agents can review your flashcards programmatically!
           ```
         generate_release_notes: true

@@ -8,7 +8,7 @@ A terminal-based spaced repetition system with modular architecture, interactive
 - 📝 **Markdown Cards** - Cards are plain markdown files with syntax highlighting
 - 📁 **Folder-based Decks** - Organize cards in directories, any structure you want
 - ⌨️ **Interactive TUI** - Clean, full-screen review experience with live editing
-- 🤖 **MCP Server** - Programmatic access for AI agents and LLMs
+- 🤖 **Built-in MCP Server** - AI integration included in single binary
 - 🔧 **Modular Architecture** - Shared core library for consistent behavior
 - 🧪 **Comprehensive Tests** - Well-tested core logic
 - 📊 **Git Integration** - Version control your learning with git
@@ -26,8 +26,7 @@ srs/
 │   ├── scheduler.go # FSRS scheduling logic
 │   └── types.go   # Shared types and interfaces
 ├── tui/           # Terminal UI implementation
-├── mcp/           # MCP server for AI integration
-├── cmd/           # Command-line interface
+├── mcp_simple.go  # Built-in MCP server for AI integration
 └── testdata/      # Test fixtures and examples
 ```
 
@@ -42,12 +41,7 @@ curl -sSL https://raw.githubusercontent.com/finnzink/srs/main/install.sh | bash
 ```bash
 git clone https://github.com/finnzink/srs
 cd srs
-
-# Build CLI
-cd cmd && go build -o ../srs
-
-# Build MCP server
-cd ../mcp && go build -o ../srs-mcp-server
+go build -o srs .
 ```
 
 ## Quick Start
@@ -78,8 +72,9 @@ cd ../mcp && go build -o ../srs-mcp-server
 
 ```bash
 ./srs review [DECK]    # Start interactive review session
-./srs list [DECK]      # Show deck tree with due dates and stats
+./srs list [DECK]      # Show deck tree with due dates and stats  
 ./srs config           # Set up base deck directory
+./srs mcp              # Start MCP server for AI integration
 ./srs version          # Show version information
 ./srs update           # Update to latest version
 ```
@@ -149,7 +144,7 @@ The MCP (Model Context Protocol) server enables AI agents to interact with your 
 ### Start the MCP Server
 
 ```bash
-./srs-mcp-server
+./srs mcp
 ```
 
 ### Available MCP Tools
@@ -186,6 +181,15 @@ The MCP (Model Context Protocol) server enables AI agents to interact with your 
 }
 ```
 
+### Configure with Claude Code
+
+```bash
+# Add SRS MCP server to Claude Code
+claude mcp add srs -- /path/to/srs mcp
+
+# Now AI agents can access your flashcards!
+```
+
 ### AI Integration Use Cases
 
 - **Automated Review Sessions** - Have AI agents review cards based on performance
@@ -208,10 +212,10 @@ go test -v ./core/...
 
 ### Project Structure
 
-- **core/**: Shared business logic, fully tested and reusable
+- **core/**: Shared business logic, fully tested and reusable  
 - **tui/**: Bubble Tea-based terminal interface
-- **mcp/**: Model Context Protocol server implementation
-- **cmd/**: Command-line interface using core library
+- **mcp_simple.go**: Built-in MCP server for AI integration
+- **main.go**: Unified command-line interface
 
 ## Migration from Previous Version
 
@@ -222,7 +226,7 @@ This version removes the turn-based CLI review functionality in favor of a unifi
 ### What Changed
 - ✅ **Removed**: `srs review -r <rating>` turn-based workflow  
 - ✅ **New**: All reviews use interactive TUI interface
-- ✅ **New**: MCP server for AI integration
+- ✅ **New**: Built-in MCP server for AI integration (single binary!)
 - ✅ **New**: Modular architecture with shared core library
 - ✅ **New**: Comprehensive test suite
 - ✅ **Improved**: Better error handling and user experience
@@ -237,8 +241,8 @@ This version removes the turn-based CLI review functionality in favor of a unifi
 ### Migration Steps
 
 1. **No action required** - your existing cards and configuration will work
-2. **Update workflows** - replace turn-based review scripts with interactive sessions
-3. **Consider AI integration** - explore MCP server capabilities for enhanced workflows
+2. **Update workflows** - replace turn-based review scripts with interactive sessions  
+3. **Try AI integration** - use `srs mcp` command and configure with Claude Code for enhanced workflows
 
 ## Configuration
 
@@ -314,12 +318,12 @@ Time: O(n log n) average, O(n²) worst case
 
 ## Why This Architecture?
 
-This modular design provides:
+This unified design provides:
 
-- **Consistency** - Same logic across TUI and MCP interfaces
+- **Simplicity** - Single binary with all functionality included
+- **Consistency** - Same logic across TUI and MCP interfaces  
 - **Testability** - Core logic is thoroughly tested
-- **Extensibility** - Easy to add new interfaces or features  
-- **AI Integration** - MCP server enables powerful AI workflows
+- **AI-Ready** - Built-in MCP server for seamless AI integration
 - **Maintainability** - Clean separation of concerns
 
 Perfect for developers who want both interactive review and programmatic access to their learning data.

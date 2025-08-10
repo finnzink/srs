@@ -16,6 +16,7 @@ COMMANDS:
     review                     Show next card (turn-based) or rate current card
     list [SUBDECK]             Show deck tree with due dates and stats
     config                     Set up base deck directory
+    mcp                        Start MCP server for AI integration
     update                     Update to the latest version
     version                    Show version information
 
@@ -116,7 +117,7 @@ func main() {
 	}
 	
 	// Check if this is first run (no base deck configured) and command needs it
-	if config.BaseDeckPath == "" && command != "config" && command != "version" && command != "update" {
+	if config.BaseDeckPath == "" && command != "config" && command != "version" && command != "update" && command != "mcp" {
 		fmt.Println("No base deck configured. Let's set one up first!")
 		err := promptForBaseDeck()
 		if err != nil {
@@ -150,7 +151,7 @@ func main() {
 	}
 
 	// Resolve deck path using config (unless it's a command that doesn't need a deck)
-	if command != "config" && command != "version" && command != "update" {
+	if command != "config" && command != "version" && command != "update" && command != "mcp" {
 		resolvedPath, err := resolveDeckPath(deckPath, config)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: Invalid path %s: %v\n", deckPath, err)
@@ -189,6 +190,12 @@ func main() {
 		}
 	case "version":
 		printVersion()
+	case "mcp":
+		err := mcpSimpleCommand()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
 	case "update":
 		err := updateCommand()
 		if err != nil {
